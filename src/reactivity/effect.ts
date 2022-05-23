@@ -2,7 +2,7 @@
  * @Author: tywd
  * @Date: 2022-05-23 22:00:36
  * @LastEditors: tywd
- * @LastEditTime: 2022-05-23 22:26:34
+ * @LastEditTime: 2022-05-23 22:41:49
  * @FilePath: /guide-mini-vue3/src/reactivity/effect.ts
  * @Description: effect 实现
  */
@@ -14,7 +14,8 @@ class ReactiveEffect {
     }
     run() {
         activeEffect = this;  // 一开始就将 ReactiveEffect 实例 存在全局变量 activeEffect
-        this._fn();
+        // this._fn();
+        return this._fn();
     }
 }
 
@@ -26,6 +27,7 @@ class ReactiveEffect {
 export function effect(fn) {
     const _effect = new ReactiveEffect(fn); // 用类来收集
     _effect.run(); // 会触发 reactive里 proxy 的 get 从而触发 track，此时 run 后的 activeEffect 已经绑定
+    return _effect.run.bind(_effect);
 }
 
 const targetMap = new Map(); // 定义一个全局的 Map 用于收集 reactive 传进的 object 的依赖

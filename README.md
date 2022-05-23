@@ -2,3 +2,5 @@
 配置jest typescript babel
 jest 测试
 ### 2.实现 effect & reactive & 依赖收集 & 触发依赖
+
+### 3.实现 effect 返回 runner
