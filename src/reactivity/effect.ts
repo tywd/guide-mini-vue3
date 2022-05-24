@@ -2,15 +2,17 @@
  * @Author: tywd
  * @Date: 2022-05-23 22:00:36
  * @LastEditors: tywd
- * @LastEditTime: 2022-05-23 22:41:49
+ * @LastEditTime: 2022-05-24 09:41:10
  * @FilePath: /guide-mini-vue3/src/reactivity/effect.ts
  * @Description: effect 实现
  */
 let activeEffect;
 class ReactiveEffect {
     private _fn: any
-    constructor(fn) {
+    public scheduler: Function | undefined;
+    constructor(fn, scheduler?) {
         this._fn = fn;
+        this.scheduler = scheduler
     }
     run() {
         activeEffect = this;  // 一开始就将 ReactiveEffect 实例 存在全局变量 activeEffect
@@ -24,8 +26,10 @@ class ReactiveEffect {
  * @param fn {function}
  * @return {*}
  */
-export function effect(fn) {
-    const _effect = new ReactiveEffect(fn); // 用类来收集
+export function effect(fn, options: any = {}) {
+    const scheduler = options.scheduler
+
+    const _effect = new ReactiveEffect(fn, scheduler); // 用类来收集
     _effect.run(); // 会触发 reactive里 proxy 的 get 从而触发 track，此时 run 后的 activeEffect 已经绑定
     return _effect.run.bind(_effect);
 }
@@ -58,7 +62,7 @@ export function track(target, key) {
 
     // 1、将一开始实例后的 ReactiveEffect 依赖收集存入 dep，
     // 2、等待 trigger 触发
-    dep.add(activeEffect); 
+    dep.add(activeEffect);
 }
 
 /**
@@ -75,6 +79,11 @@ export function trigger(target, key) {
     // 3、接着找到 object.key 的依赖
     let dep = depsMap.get(key)
     for (const effect of dep) {
-        effect.run() // 4、执行 track 时收集进来的依赖实例的 run(), 则会再一次调用了 effect，完成响应式更新
+        if (effect.scheduler) {
+            effect.scheduler()
+        } else {
+            effect.run() // 4、执行 track 时收集进来的依赖实例的 run(), 则会再一次调用了 effect，完成响应式更新
+        }
+
     }
 }
