@@ -2,11 +2,17 @@
  * @Author: tywd
  * @Date: 2022-05-23 22:03:28
  * @LastEditors: tywd
- * @LastEditTime: 2022-06-14 20:12:05
+ * @LastEditTime: 2022-06-15 00:51:38
  * @FilePath: /guide-mini-vue3/src/reactivity/reactive.ts
- * @Description: reactive 实现
+ * @Description: reactive readonly isReactive isReadonly 实现
  */
 import { mutableHandles, readonlyHandles } from "./baseHandles";
+
+// 定义一个枚举来让 reactive 和 readonly 访问
+export const enum ReactiveFlags {
+    IS_REACTIVE = '__v_isReactive',
+    IS_READONLY = '__v_isReadonly'
+}
 
 /**
  * @Descripttion
@@ -29,6 +35,26 @@ export function reactive(raw) {
  */
 export function readonly(raw) {
     return createActiveObject(raw, readonlyHandles)
+}
+
+/**
+ * @description 判断是否是我们做的 reactive 方法类型
+ * @param {reactive} value 当访问value的子元素时会触发 reactive 方法里的 get，获得key is_reactive，所以在 reactive - get 里处理即可
+ * @return {boolean} 
+ */
+export function isReactive(value){
+    // 若校验是否为false，传入的可能不是一个reactive而是一个普通的object，
+    // 而object里没有改key值会返回 undefined，则统一用 !! 转 boolean
+    return !!value[ReactiveFlags.IS_REACTIVE] 
+}
+
+/**
+ * @description 判断是否是我们做的 readonly 方法类型，与 isReactive 同理
+ * @param {reactive} value
+ * @return {boolean} 
+ */
+export function isReadonly(value){
+    return !!value[ReactiveFlags.IS_READONLY]
 }
 
 function createActiveObject(raw, baseHandles = mutableHandles){

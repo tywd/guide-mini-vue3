@@ -2,11 +2,12 @@
  * @Author: tywd
  * @Date: 2022-06-14 20:09:26
  * @LastEditors: tywd
- * @LastEditTime: 2022-06-14 22:12:30
+ * @LastEditTime: 2022-06-15 00:43:07
  * @FilePath: /guide-mini-vue3/src/reactivity/baseHandles.ts
  * @Description: 基础控制器
  */
 import { track, trigger } from "./effect";
+import { ReactiveFlags } from "./reactive";
 
 // 提前初始化变量，方便复用
 const get = createGetter();
@@ -22,6 +23,12 @@ const readonlyGet = createGetter(true);
 function createGetter(isReadonly = false) {
     return function (target, key) {
         const res = Reflect.get(target, key)
+        if(key === ReactiveFlags.IS_REACTIVE){ // 如果key为IS_REACTIVE 即为true
+            return !isReadonly
+        } else if(key === ReactiveFlags.IS_READONLY){
+            return isReadonly
+        }
+
         if (!isReadonly) {
             // 收集依赖
             track(target, key);
