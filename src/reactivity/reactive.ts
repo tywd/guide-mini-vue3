@@ -2,14 +2,14 @@
  * @Author: tywd
  * @Date: 2022-05-23 22:03:28
  * @LastEditors: tywd
- * @LastEditTime: 2022-05-23 22:07:08
+ * @LastEditTime: 2022-06-14 20:12:05
  * @FilePath: /guide-mini-vue3/src/reactivity/reactive.ts
  * @Description: reactive 实现
  */
-import { track, trigger } from "./effect";
+import { mutableHandles, readonlyHandles } from "./baseHandles";
 
 /**
- * @Descripttion: 
+ * @Descripttion
  * @param raw {object} reactive 传进的 object
  * ? 关于使用vue3 Proxy 数据劫持为什么用 Reflect.get(target,key) 而不用 target[key] 的原因
    当我们在 Proxy 中使用Reflect，可以添加一个额外参数receiver，可以被传递到Reflect调用中。
@@ -19,19 +19,18 @@ import { track, trigger } from "./effect";
  * @return {*}
  */
 export function reactive(raw) {
-    return new Proxy(raw, { // 使用 Proxy 来进行代理
-        get(target, key) {
-            const res = Reflect.get(target, key)
-            // 收集依赖
-            track(target, key);
-            return res
-        },
+    return createActiveObject(raw, mutableHandles)
+}
 
-        set(target, key, value) {
-            const res = Reflect.set(target, key, value)
-            // 触发依赖
-            trigger(target, key)
-            return res
-        }
-    })
+/**
+ * @Descripttion 不可以被修改，也就是不可以被 set
+ * @param {object} raw 
+ * @return {*} 
+ */
+export function readonly(raw) {
+    return createActiveObject(raw, readonlyHandles)
+}
+
+function createActiveObject(raw, baseHandles = mutableHandles){
+    return new Proxy(raw, baseHandles) // 使用 Proxy 来进行代理
 }
