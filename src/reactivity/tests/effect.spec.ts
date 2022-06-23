@@ -1,10 +1,10 @@
 /*
  * @Author: tywd
  * @Date: 2022-05-23 22:00:23
- * @LastEditors: tywd
- * @LastEditTime: 2022-05-24 12:32:56
+ * @LastEditors: shichuyu 1042048096@qq.com
+ * @LastEditTime: 2022-06-23 23:46:09
  * @FilePath: /guide-mini-vue3/src/reactivity/tests/effect.spec.ts
- * @Description: Do not edit
+ * @Description: effect
  */
 import { reactive } from "../reactive";
 import { effect, stop } from "../effect";
@@ -84,18 +84,19 @@ describe('effect', () => {
         // stop 时执行清空找到对应 track 收集起来的 dep 下的 effect，之后则不再会调用 effect fn
         stop(runner);
 
-        // 上面stop后，因为下面这一行是只触发 set 的 trigger 函数，此时没有依赖 effect，所以 effect fn 并不执行，所以 dummy 不变，但 obj.prop 是有改变的
-        obj.prop = 3;
-        expect(dummy).toBe(2);
+        // 上面stop后，因为下面这一行是只触发 set 的 trigger 函数，此时依赖已经被 stop 清除 effect，所以 effect fn 并不执行，所以 dummy 不变，但 obj.prop 是有改变的
+        // obj.prop = 3;
+        // expect(dummy).toBe(2);
         
         // 上面执行 obj.prop=3 是没问题的，但执行 obj.prop++ 有问题
         // 因为它涉及到两步 obj.prop = obj.prop + 1
         /* 
-        第一步是 obj.prop(get) 收集依赖，由于 stop 后依赖已被清除，即没有了 effect(()=>{}) 这个方法了，也就是依赖收集没用
-        第二步是 obj.prop + 1(set) 触发依赖，由于上面 effect 被清除了，所以触发依赖的流程 调用了 effect.run() 也没用，obj.prop无法触发 dummy 更新，所以 +1 也没用就都报错了
-        解决：在收集依赖 track 时做下处理加个参数 shouldTrack 来处理，让第二步 effect.run 时执行一次依赖收集 */
-        // obj.prop++; 
-        // expect(dummy).toBe(2);
+        第一步是 obj.prop(get) 收集依赖，由于 stop 后依赖已被清除，即没有了 effect(()=>{}) 这个方法了，我们 get 时又会去收集一次依赖，那 stop 不是白清除了？
+        第二步是 obj.prop + 1(set) 触发依赖，调用了 effect.run() 所以又触发了 effect fn 使 dummy 更新成了 dummy = 3
+        但我们希望是 stop 后就 effect fn 就不会被执行的，希望得到 dummy = 2，所以在这次的 get 中就不应再收集 effect，这样 trigger 时才不会触发 effect.run()
+        解决：在收集依赖 track 时做下处理加个参数 shouldTrack 来处理, 不要再收集依赖即可，只要没有依赖，下次 trigger 触发时就不会调用 effect.run() */
+        obj.prop++;
+        expect(dummy).toBe(2);
     
         // stopped effect should still be manually callable
         runner(); // 执行runner后就会再次更新

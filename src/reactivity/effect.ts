@@ -1,13 +1,13 @@
 /*
  * @Author: tywd
  * @Date: 2022-05-23 22:00:36
- * @LastEditors: tywd
- * @LastEditTime: 2022-05-24 12:30:24
+ * @LastEditors: tywd 1042048096@qq.com
+ * @LastEditTime: 2022-06-23 23:48:47
  * @FilePath: /guide-mini-vue3/src/reactivity/effect.ts
  * @Description: effect 实现
  */
 import { extend } from "./shared";
-let activeEffect;
+let activeEffect,shouldTrack; // shouldTrack 是否应该收集依赖
 class ReactiveEffect {
     private _fn: any
     public scheduler: Function | undefined;
@@ -20,9 +20,14 @@ class ReactiveEffect {
         this.deps = []
     }
     run() {
+        if(!this.active) return this._fn();
+        shouldTrack = true; // 表示可收集依赖
         activeEffect = this;  // 一开始就将 ReactiveEffect 实例 存在全局变量 activeEffect
         // this._fn();
-        return this._fn();
+        // return this._fn();
+        const result = this._fn();
+        shouldTrack = false // fn执行后 触发了get track 收集依赖后 就关上 shouldTrack 下次没必要收集，主要用于应对 stop runner 后的操作
+        return result;
     }
     stop() {
         if (this.active) { // 避免外部频繁调用 stop 来清空effect，加个 active 标记一下
@@ -76,6 +81,7 @@ export function track(target, key) {
     // 2、当 effect 被执行时，ReactiveEffect 才会被实例化，调用run 方法，将该实例给到 activeEffect，之后的 track 依赖收集才有意义
     // 3、将 effect 理解成 提供一个依赖函数就可以
     if (!activeEffect) return; // 由于track 是只要执行 Proxy 的get就会触发，但如果 effect 方法未被定义，activeEffect是没用的，所以如果没有activeEffect，就不应走下面代码
+    if (!shouldTrack) return; // shouldTrack 是否应该收集依赖
     let depsMap = targetMap.get(target) // 得到 reactive 传进的 object 的值
     if (!depsMap) {
         depsMap = new Map()
@@ -120,7 +126,6 @@ export function trigger(target, key) {
         } else {
             effect.run() // 4、执行 track 时收集进来的依赖实例的 run(), 则会再一次调用了 effect，完成响应式更新
         }
-
     }
 }
 
