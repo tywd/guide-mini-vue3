@@ -36,6 +36,7 @@ runner()
 ```
 
 ### 5.实现 effect 的 stop 功能
+
 ```js
 // 基于 第四点的代码，再加一个 onStop
 const num = reactive({ currentNum: 0, chunks: [] })
@@ -62,3 +63,30 @@ const runner = () => {
 runner()
 stop(runner) // stop后除非再执行一次 runner 否则 effect 将不会再执行
 ```
+### 6.readonly实现 与 代码重构
+https://staging-cn.vuejs.org/api/reactivity-core.html#readonly
+### 7.isReative and isReadonly 实现
+https://staging-cn.vuejs.org/api/reactivity-utilities.html#isreactive
+### 8.effect 优化 stop 功能 满足 obj.prop++
+```js  
+  // obj.prop++ 
+  // 因为它涉及到两步 obj.prop = obj.prop + 1
+  /**
+   * 第一步是 obj.prop(get) 收集依赖，由于 stop 后依赖已被清除，即没有了 effect(()=>{}) 这个方法了，我们 get 时又会去收集一次依赖，那 stop 不是白清除了？
+   * 第二步是 obj.prop + 1(set) 触发依赖，调用了 effect.run() 所以又触发了 effect fn 使 dummy 更新成了 dummy = 3
+   * 但我们希望是 stop 后就 effect fn 就不会被执行的，希望得到 dummy = 2，所以在这次的 get 中就不应再收集 effect，这样 trigger 时才不会触发 effect.run()
+   * 解决：在收集依赖 track 时做下处理加个参数 shouldTrack 来处理, 不要再收集依赖即可，只要没有依赖，下次 trigger 触发时就不会调用 effect.run()
+   */
+```
+### 9.reactive 与 readonly 嵌套实现
+`reactive` 与 `readonly` 的深层嵌套应该具备相同的功能
+### 10.shallowReactive 与 shallowReadonly 实现
+https://staging-cn.vuejs.org/api/reactivity-advanced.html#shallowreactive
+
+`shallowReactive()` 是 `reactive()` 的浅层作用形式。
+
+`shallowReadonly()` 是 `readonly()` 的浅层作用形式。
+### 11.isProxy 实现 
+https://staging-cn.vuejs.org/api/reactivity-utilities.html#isproxy
+
+检查一个对象是否是由 `reactive()`、`readonly()`、`shallowReactive()` 或 `shallowReadonly()` 创建的代理。

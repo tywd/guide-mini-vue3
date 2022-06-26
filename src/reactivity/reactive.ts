@@ -2,9 +2,9 @@
  * @Author: tywd
  * @Date: 2022-05-23 22:03:28
  * @LastEditors: tywd
- * @LastEditTime: 2022-06-26 16:59:15
+ * @LastEditTime: 2022-06-26 23:03:16
  * @FilePath: /guide-mini-vue3/src/reactivity/reactive.ts
- * @Description: reactive readonly isReactive isReadonly shallowReactiv shallowReadonly 实现
+ * @Description: reactive readonly isReactive isReadonly shallowReactiv shallowReadonly isProxy 实现
  */
 import { mutableHandles, readonlyHandles, shallowReactivHandles, shallowReadonlyHandles } from "./baseHandles";
 
@@ -67,4 +67,13 @@ export function isReadonly(value){
 
 function createActiveObject(raw, baseHandles = mutableHandles){
     return new Proxy(raw, baseHandles) // 使用 Proxy 来进行代理
+}
+
+/**
+ * @description 判断是否是 isProxy 方法类型
+ * @param {reactive | readonly | shallowReactive | shallowReadonly} value
+ * @return {boolean} 
+ */
+export function isProxy(value){
+    return isReactive(value) || isReadonly(value)
 }

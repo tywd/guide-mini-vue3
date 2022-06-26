@@ -2,12 +2,12 @@
  * @Author: tywd
  * @Date: 2022-06-25 14:19:42
  * @LastEditors: tywd
- * @LastEditTime: 2022-06-26 16:57:12
+ * @LastEditTime: 2022-06-26 23:03:44
  * @FilePath: /guide-mini-vue3/src/reactivity/tests/shallowReactive.spec.ts
  * @Description: shallowReactive 只有第一层是 reactive，第二层以及之后的内层 不为 reactive
  */
 import { effect } from "../effect";
-import { shallowReactive, isReactive, reactive } from "../reactive";
+import { shallowReactive, isReactive, reactive, isProxy } from "../reactive";
 
 describe('shallowReactive', () => {
     it('should not make non-reactive properties reactive', () => {
@@ -31,5 +31,7 @@ describe('shallowReactive', () => {
 
         obj.nested.bar++;
         expect(dummy3).toBe(3) // obj 整个包括嵌套子层是 reactive，即 obj.nested.bar 响应式，所以dummy3为3
+
+        expect(isProxy(observed)).toBe(true);
     });
 })

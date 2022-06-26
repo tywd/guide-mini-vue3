@@ -1,12 +1,12 @@
-/*
+/**
  * @Author: tywd
  * @Date: 2022-05-23 22:03:24
- * @LastEditors: tywd 1042048096@qq.com
- * @LastEditTime: 2022-06-24 17:23:10
+ * @LastEditors: tywd
+ * @LastEditTime: 2022-06-26 23:24:51
  * @FilePath: /guide-mini-vue3/src/reactivity/tests/reactive.spec.ts
- * @Description: reactive 测试
+ * @Description: reactive isProxy test
  */
-import { isReactive, reactive } from "../reactive";
+import { isReactive, reactive, isProxy } from "../reactive";
 
 describe('reactive', () => {
     it('happy path', () => {
@@ -17,6 +17,8 @@ describe('reactive', () => {
 
         expect(isReactive(observed)).toBe(true);
         expect(isReactive(original)).toBe(false);
+
+        expect(isProxy(observed)).toBe(true);
     });
 
     test("nested reactive", () => {
