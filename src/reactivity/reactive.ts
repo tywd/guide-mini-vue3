@@ -1,12 +1,12 @@
-/*
+/**
  * @Author: tywd
  * @Date: 2022-05-23 22:03:28
  * @LastEditors: tywd
- * @LastEditTime: 2022-06-15 00:51:38
+ * @LastEditTime: 2022-06-26 16:59:15
  * @FilePath: /guide-mini-vue3/src/reactivity/reactive.ts
- * @Description: reactive readonly isReactive isReadonly 实现
+ * @Description: reactive readonly isReactive isReadonly shallowReactiv shallowReadonly 实现
  */
-import { mutableHandles, readonlyHandles } from "./baseHandles";
+import { mutableHandles, readonlyHandles, shallowReactivHandles, shallowReadonlyHandles } from "./baseHandles";
 
 // 定义一个枚举来让 reactive 和 readonly 访问
 export const enum ReactiveFlags {
@@ -26,6 +26,14 @@ export const enum ReactiveFlags {
  */
 export function reactive(raw) {
     return createActiveObject(raw, mutableHandles)
+}
+
+export function shallowReactive(raw){
+    return createActiveObject(raw, shallowReactivHandles)
+}
+
+export function shallowReadonly(raw){
+    return createActiveObject(raw, shallowReadonlyHandles)
 }
 
 /**

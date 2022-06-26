@@ -1,4 +1,12 @@
-export const extend = Object.assign;
+/**
+ * @Author: tywd
+ * @Date: 2022-05-24 12:21:56
+ * @LastEditors: tywd
+ * @LastEditTime: 2022-06-26 16:31:33
+ * @FilePath: /guide-mini-vue3/src/reactivity/shared/index.ts
+ * @Description: 
+ */
+export const extend = Object.assign; // 如果希望防止合并时源对象被修改到，传值时第一个参数请设置为 {}，具体可参考 https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
 
 export const isObject = (val) => {
     return val !== null && typeof val === "object"
