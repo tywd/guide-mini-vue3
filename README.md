@@ -90,3 +90,14 @@ https://staging-cn.vuejs.org/api/reactivity-advanced.html#shallowreactive
 https://staging-cn.vuejs.org/api/reactivity-utilities.html#isproxy
 
 检查一个对象是否是由 `reactive()`、`readonly()`、`shallowReactive()` 或 `shallowReadonly()` 创建的代理。
+
+### 12.ref 实现 
+https://staging-cn.vuejs.org/api/reactivity-core.html#ref
+
+接受一个内部值，返回一个响应式的、可更改的 `ref` 对象，此对象只有一个指向其内部值的 property `.value`。
+
+`ref` 对象是可更改的，也就是说你可以为 `.value` 赋予新的值。它也是响应式的，即所有对 `.value` 的操作都将被追踪，并且写操作会触发与之相关的副作用。
+
+如果将一个对象赋值给 `ref` ，那么这个对象将通过 `reactive()` 转为具有深层次响应式的对象。这也意味着如果对象中包含了嵌套的 `ref` ，它们将被深层地解包。
+
+若要避免这种深层次的转换，请使用 `shallowRef()` 来替代。

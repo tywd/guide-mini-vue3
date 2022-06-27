@@ -80,8 +80,8 @@ export function track(target, key) {
     // 1、一开始未进行 new ReactiveEffect() 时，activeEffect 为空，track 不进行依赖收集，所以vue内部一开始是有执行行一次effect方法
     // 2、当 effect 被执行时，ReactiveEffect 才会被实例化，调用run 方法，将该实例给到 activeEffect，之后的 track 依赖收集才有意义
     // 3、将 effect 理解成 提供一个依赖函数就可以
-    if (!activeEffect) return; // 由于track 是只要执行 Proxy 的get就会触发，但如果 effect 方法未被定义，activeEffect是没用的，所以如果没有activeEffect，就不应走下面代码
-    if (!shouldTrack) return; // shouldTrack 是否应该收集依赖
+    if (!isTracking()) return;
+
     let depsMap = targetMap.get(target) // 得到 reactive 传进的 object 的值
     if (!depsMap) {
         depsMap = new Map()
@@ -94,8 +94,19 @@ export function track(target, key) {
         depsMap.set(key, dep)
     }
 
-    if (dep.has(activeEffect)) return; // 依赖已收集则直接 return
+    trackEffects(dep) // 收集依赖
+}
 
+// 锁定是否需要收集依赖
+export function isTracking(){
+    /* if (!activeEffect) return; // 由于track 是只要执行 Proxy 的get就会触发，但如果 effect 方法未被定义，activeEffect是没用的，所以如果没有activeEffect，就不应走下面代码
+    if (!shouldTrack) return; // shouldTrack 是否应该收集依赖 */
+    return shouldTrack && activeEffect !== undefined
+}
+
+// 收集依赖
+export function trackEffects(dep){
+    if (dep.has(activeEffect)) return; // 依赖已收集则直接 return
     // 1、将一开始实例后的 ReactiveEffect 依赖收集存入 dep，
     // 2、等待 trigger 触发
     dep.add(activeEffect);
@@ -120,6 +131,12 @@ export function trigger(target, key) {
     let depsMap = targetMap.get(target)
     // 3、接着找到 object.key 的依赖
     let dep = depsMap.get(key)
+
+    triggerEffects(dep) // 触发依赖
+}
+
+// 触发依赖
+export function triggerEffects(dep){
     for (const effect of dep) {
         if (effect.scheduler) {
             effect.scheduler()
