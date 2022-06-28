@@ -8,7 +8,7 @@
  */
 import { extend } from "./shared";
 let activeEffect,shouldTrack; // shouldTrack 是否应该收集依赖
-class ReactiveEffect {
+export class ReactiveEffect {
     private _fn: any
     public scheduler: Function | undefined;
     private deps: []
@@ -16,6 +16,9 @@ class ReactiveEffect {
     public onStop?: () => void // stop 被调用后 执行一次 onStop
     constructor(fn, scheduler?) {
         this._fn = fn;
+        // ReactiveEffect 当有第二个参数 schedule 时，schedule 一开始不会被执行
+        // 当执行完 getter 一次后，之后 set 时都会执行第二个方法 schedule
+        // 若未设置 第二个参数 schedule 则一直执行第一个参数 getter 方法
         this.scheduler = scheduler
         this.deps = []
     }

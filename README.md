@@ -137,5 +137,7 @@ export function proxyRefs(objectWithRefs) {
     })
 }
 ```
+### 15.computed
+https://staging-cn.vuejs.org/api/reactivity-core.html#computed
 
-
+接受一个 `getter` 函数，返回一个只读的响应式 `ref` 对象，即 `getter` 函数的返回值。它也可以接受一个带有 `get` 和 `set` 函数的对象来创建一个可写的 `ref` 对象
