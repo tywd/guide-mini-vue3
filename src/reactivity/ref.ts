@@ -2,8 +2,8 @@
  * @Author: tywd
  * @Date: 2022-06-27 21:42:52
  * @LastEditors: tywd
- * @LastEditTime: 2022-06-27 23:10:40
- * @FilePath: /guide-mini-vue3/src/reactivity/ref.ts
+ * @LastEditTime: 2022-06-28 09:00:05
+ * @FilePath: \guide-mini-vue3\src\reactivity\ref.ts
  * @Description: ref isRef unRef proxyRefs
  */
 import { hasChanged, isObject } from './shared/index';
@@ -13,6 +13,7 @@ class RefImpl {
     private _value: any;
     private dep: Set<unknown>;
     private _rawValue: any;
+    public __v_isRef: boolean = true;
     constructor(value) {
         this._rawValue = value
         this._value = convert(value)
@@ -53,10 +54,15 @@ export function ref(value) {
     return value
 }
 
-export function isRef(value) {
+// 是否 ref 声明
+export function isRef(ref) {
+    // return raw instanceof RefImpl
+    return !!ref.__v_isRef // !! 双感叹号 防止传入常量 or undefined 等 可以进行强转换 boolean 类型
 }
 
-export function unRef(value) {
+// 非ref声明的直接返回本身
+export function unRef(ref) {
+    return isRef(ref) ? ref.value : ref;
 }
 
 export function proxyRefs(value) {

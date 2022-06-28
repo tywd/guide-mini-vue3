@@ -2,8 +2,8 @@
  * @Author: tywd
  * @Date: 2022-06-27 21:42:42
  * @LastEditors: tywd
- * @LastEditTime: 2022-06-27 22:52:34
- * @FilePath: /guide-mini-vue3/src/reactivity/tests/ref.spec.ts
+ * @LastEditTime: 2022-06-28 09:02:12
+ * @FilePath: \guide-mini-vue3\src\reactivity\tests\ref.spec.ts
  * @Description: 
  */
 import { effect } from "../effect";
@@ -47,21 +47,21 @@ describe("ref", () => {
     expect(dummy).toBe(2);
   });
 
-  // it("isRef", () => {
-  //   const a = ref(1);
-  //   const user = reactive({
-  //     age: 1,
-  //   });
-  //   expect(isRef(a)).toBe(true);
-  //   expect(isRef(1)).toBe(false);
-  //   expect(isRef(user)).toBe(false);
-  // }); 
+  it("isRef", () => {
+    const a = ref(1);
+    const user = reactive({
+      age: 1,
+    });
+    expect(isRef(a)).toBe(true);
+    expect(isRef(1)).toBe(false);
+    expect(isRef(user)).toBe(false);
+  }); 
 
-  // it("unRef", () => {
-  //   const a = ref(1);
-  //   expect(unRef(a)).toBe(1);
-  //   expect(unRef(1)).toBe(1);
-  // });
+  it("unRef", () => {
+    const a = ref(1);
+    expect(unRef(a)).toBe(1);
+    expect(unRef(1)).toBe(1);
+  });
 
   // it("proxyRefs", () => {
   //   const user = {

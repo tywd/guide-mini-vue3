@@ -101,3 +101,12 @@ https://staging-cn.vuejs.org/api/reactivity-core.html#ref
 如果将一个对象赋值给 `ref` ，那么这个对象将通过 `reactive()` 转为具有深层次响应式的对象。这也意味着如果对象中包含了嵌套的 `ref` ，它们将被深层地解包。
 
 若要避免这种深层次的转换，请使用 `shallowRef()` 来替代。
+
+### 13.isRef/unRef
+https://staging-cn.vuejs.org/api/reactivity-utilities.html#isref
+
+`isRef` 检查某个值是否为 `ref`
+
+https://staging-cn.vuejs.org/api/reactivity-utilities.html#unref
+
+如果参数是 `ref` ，则返回内部值，否则返回参数本身。这是 `val = isRef(val) ? val.value : val` 计算的一个语法糖。
