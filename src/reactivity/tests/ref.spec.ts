@@ -2,7 +2,7 @@
  * @Author: tywd
  * @Date: 2022-06-27 21:42:42
  * @LastEditors: tywd
- * @LastEditTime: 2022-06-28 09:02:12
+ * @LastEditTime: 2022-06-28 12:05:44
  * @FilePath: \guide-mini-vue3\src\reactivity\tests\ref.spec.ts
  * @Description: 
  */
@@ -63,24 +63,24 @@ describe("ref", () => {
     expect(unRef(1)).toBe(1);
   });
 
-  // it("proxyRefs", () => {
-  //   const user = {
-  //     age: ref(10),
-  //     name: "xiaohong",
-  //   };
+  it("proxyRefs", () => {
+    const user = {
+      age: ref(10),
+      name: "xiaohong",
+    };
 
-  //   const proxyUser = proxyRefs(user);
-  //   expect(user.age.value).toBe(10);
-  //   expect(proxyUser.age).toBe(10); // 使用proxyRefs之后可省略ref的 .value语法
-  //   expect(proxyUser.name).toBe("xiaohong");
+    const proxyUser = proxyRefs(user);
+    expect(user.age.value).toBe(10);
+    expect(proxyUser.age).toBe(10); // 使用proxyRefs之后可省略ref的 .value语法
+    expect(proxyUser.name).toBe("xiaohong");
 
-  //   proxyUser.age = 20;
+    proxyUser.age = 20;
 
-  //   expect(proxyUser.age).toBe(20);
-  //   expect(user.age.value).toBe(20);
+    expect(proxyUser.age).toBe(20);
+    expect(user.age.value).toBe(20);
 
-  //   proxyUser.age = ref(10);
-  //   expect(proxyUser.age).toBe(10);
-  //   expect(user.age.value).toBe(10);
-  // });
+    proxyUser.age = ref(10);
+    expect(proxyUser.age).toBe(10);
+    expect(user.age.value).toBe(10);
+  });
 });

@@ -110,3 +110,32 @@ https://staging-cn.vuejs.org/api/reactivity-utilities.html#isref
 https://staging-cn.vuejs.org/api/reactivity-utilities.html#unref
 
 如果参数是 `ref` ，则返回内部值，否则返回参数本身。这是 `val = isRef(val) ? val.value : val` 计算的一个语法糖。
+
+### 14.proxyRefs
+https://github.com/vuejs/core/pull/1682
+
+使用proxyRefs之后可省略ref的 .value语法
+
+```js
+export function proxyRefs(objectWithRefs) {
+    return new Proxy(objectWithRefs, {
+        get(target, key) {
+            // isRef -> age = ref(10) return age.value (10)
+            // not ref -> age = 10 return value (10)
+            return unRef(Reflect.get(target, key))
+        },
+
+        set(target, key, value) {
+            // isRef -> age = ref(10) -> 修改 age.value 
+            // not ref -> age = 10 -> 修改 value 
+            if(isRef(target[key]) && !isRef(value)) { // 旧值是 ref && 新值不是 ref 直接修改旧值的 ref.value
+                return target[key].value = value
+            } else {
+                return Reflect.set(target, key, value)
+            }
+        }
+    })
+}
+```
+
+
