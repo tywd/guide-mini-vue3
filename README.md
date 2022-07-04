@@ -1,5 +1,7 @@
-## 每次 commit 实现说明
+# 每次 commit 实现说明
 看代码实现时可通过单元测试一步一步看，将不需要的注释掉
+
+## 1.reactivity 模块
 ### 1.setup环境-集成jest做单元测试-集成 ts
 配置jest typescript babel
 jest 测试
@@ -141,3 +143,44 @@ export function proxyRefs(objectWithRefs) {
 https://staging-cn.vuejs.org/api/reactivity-core.html#computed
 
 接受一个 `getter` 函数，返回一个只读的响应式 `ref` 对象，即 `getter` 函数的返回值。它也可以接受一个带有 `get` 和 `set` 函数的对象来创建一个可写的 `ref` 对象
+
+## 2.runtime-core 模块
+### 1.实现初始化 component 主流程
+vue3 方法的挂载过程
+```js
+// App.js
+export const App = {
+    // .vue
+    // <template></template>
+    // render
+    render() {
+        return h('div', 'ty，', this.msg)
+    },
+
+    setup() {
+        // componition Api
+        return {
+            msg: 'hello mini-vue'
+        }
+    }
+}
+
+// main.js
+createApp(App).mount('#app')
+
+// createApp.ts
+import { render } from "./renderer"
+import { createVnode } from "./vnode"
+
+export function createApp(rootComponent) {
+    return {
+        mount(rootContainer) {
+            // vnode
+            // component -> vnode
+            // 所有的逻辑操作都会基于 vnode 操作
+            const vnode = createVnode(rootComponent)
+            render(vnode, rootContainer)
+        }
+    }
+}
+```
