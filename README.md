@@ -184,3 +184,64 @@ export function createApp(rootComponent) {
     }
 }
 ```
+### 2.使用 rollup 打包库
+安装
+`yarn add rollup --dev`
+
+根路径新建 `rollup.config.js`
+rollup 天然支持 esm ，配置如下
+```js
+import typescript from "@rollup/plugin-typescript"
+import pkg from './package.json'
+export default {
+    input: "./src/index.ts",
+    output: [
+        // 1.cjs -> common.js
+        // 2.esm -> module
+        {
+            format: "cjs",
+            file: pkg.main
+        },
+        {
+            format: "es",
+            file: pkg.module
+        },
+    ],
+    plugins: [
+        typescript()
+    ]
+}
+```
+
+安装插件解析ts `yarn add @rollup/plugin-typescript --dev`
+
+安装 `yarn add tslib --dev `,打到 lib 文件夹下
+
+配置命令在 `package.json`, 
+```js
+"main": "lib/guide-mini-vue.cjs.js",
+"module": "lib/guide-mini-vue.esm.js",
+...
+"scripts": {
+  "test": "jest",
+  "build": "rollup -c rollup.config.js"
+},
+```
+新建 `src/index.ts`
+```js
+export * from "./runtime-core";
+```
+修改 `src/runtime-core/index.ts`
+```js
+export { createApp } from "./createApp";
+export { h } from "./h";
+```
+
+
+执行 `yarn build --watch`，watch 可监听修改自动 build
+
+> 修改 `tsconfig.json` \
+> 将 `"module": "commonjs"` 改为 `"module": "esnext"`，否则 build 会有警告\
+> 将 `"moduleResolution": "node", ` 注释放开，否则 src/index.ts 会有报错 找不到 `./runtime-core`
+
+此时 浏览器报错 找不到 instance.render 是正常现象

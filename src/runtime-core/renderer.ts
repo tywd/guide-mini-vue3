@@ -2,7 +2,7 @@
  * @Author: tywd
  * @Date: 2022-07-04 21:41:59
  * @LastEditors: tywd
- * @LastEditTime: 2022-07-04 22:48:41
+ * @LastEditTime: 2022-07-05 23:11:36
  * @FilePath: /guide-mini-vue3/src/runtime-core/renderer.ts
  * @Description: 
  */
@@ -13,7 +13,10 @@ export function render(vnode, container) {
 
 function patch(vnode, container) {
     // check type of vnode
-    // TODO element
+    // TODO 判断vnode 是不是一个 element
+    // 是 element 就处理element
+    // 如何区分element 和 component
+    // processElement()
 
     processComponent(vnode, container)
 }

@@ -2,7 +2,7 @@
  * @Author: tywd
  * @Date: 2022-07-04 22:02:41
  * @LastEditors: tywd
- * @LastEditTime: 2022-07-04 22:49:12
+ * @LastEditTime: 2022-07-05 23:36:07
  * @FilePath: /guide-mini-vue3/src/runtime-core/component.ts
  * @Description: componnet 处理
  */
@@ -57,7 +57,5 @@ function handleSetupResult(instance, setupResult) {
 function finishComponentSetup(instance: any) {
     const Component = instance.type
 
-    if (Component.render) {
-        instance.render = Component.render
-    }
+    instance.render = Component.render
 }
