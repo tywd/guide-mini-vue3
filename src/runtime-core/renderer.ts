@@ -2,7 +2,7 @@
  * @Author: tywd
  * @Date: 2022-07-04 21:41:59
  * @LastEditors: tywd
- * @LastEditTime: 2022-07-09 22:07:22
+ * @LastEditTime: 2022-07-10 00:20:22
  * @FilePath: /guide-mini-vue3/src/runtime-core/renderer.ts
  * @Description: 
  */
@@ -42,7 +42,7 @@ function mountElement(vnode, container) {
 
     const { type, children, props } = vnode
     // type  
-    const el = document.createElement(type)
+    const el = (vnode.el = document.createElement(type))
     // children  string, array
     if (typeof children === 'string') {
         el.textContent = children
@@ -76,13 +76,13 @@ function processComponent(vnode, container) {
  * @param vnode 被挂载的虚拟节点
  * @param container 挂载节点的父容器
  */
-function mountComponent(vnode, container) {
+function mountComponent(initialVnode, container) {
     // 挂在组件时，创建一个组件实例，方便之后直接从实例中获取各项值
-    const instance = createComponentInstance(vnode)
+    const instance = createComponentInstance(initialVnode)
     // 绑定 setup 和 render 给到组件实例 instance，并执行组件的 setup 获得 return 的值
     setupComponent(instance)
     // 执行组件的 render 
-    setupRenderEffect(instance, container)
+    setupRenderEffect(instance, initialVnode, container)
 }
 
 /**
@@ -90,11 +90,22 @@ function mountComponent(vnode, container) {
  * @param instance 组件实例
  * @param container 挂在节点的父容器
  */
-function setupRenderEffect(instance, container) {
-    const subTree = instance.render()
+function setupRenderEffect(instance, initialVnode, container) {
+    const { proxy } = instance
+    const subTree = instance.render.call(proxy)
 
     // vnode -> patch
     // vnode -> element -> mountElement
-
     patch(subTree, container)
+    
+    // 获取初始化完成(element -> mount挂载之后)之后的el，
+    // 挂载完成后的 subTree 结构大致如下
+    /* {
+        children:[],
+        props: {},
+        type: '',
+        el: '#root'
+    } */
+    // 把当前subTree根(root)节点的el赋值给(initialVnode)的el
+    initialVnode.el = subTree.el
 }

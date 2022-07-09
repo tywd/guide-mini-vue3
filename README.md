@@ -329,5 +329,243 @@ function mountChildren(children, container) {
         patch(v, container)
     });
 }
+```
+
+### 4.实现组件代理对象
+ - 在组件里访问 setupState
+
+    将 App.js 中的 setup 返回值给到 render 渲染的组件里，使组件可以访问 this ，进而可以访问 setup 的返回值
+ - 使组件里可以访问到 $el  
+
+    组件实例正在管理的根 DOM 节点。 https://vuejs.org/api/component-instance.html#el
+
+    这里其实是 this.$el -> get root element，返回的是自己这个组件的根节点 dom实例
+
+#### 在组件里访问 setupState
+##### 1.组件初始化时先创建一个代理对象 Proxy
+```js
+// component.ts
+export function createComponentInstance(vnode: any) {
+    const component = {
+        vnode,
+        type: vnode.type,
+        setupState: {} // 创建组件实例时初始化一个 setupeState，该值是 执行 setup 后的结果 +++++++++++
+    }
+
+    return component
+}
+// ...
+function setupStateFulComponent(instance: any) {
+    const Component = instance.type // 由于在 createComponentInstance 赋值了type， 所以 instance.type 等价于 instance.vnode.type
+    // 引入代理 ++++++++++++++++
+    instance.proxy = new Proxy({}, {
+        get(target, key) {
+            const { setupState } = instance
+            if (key in setupState) {
+                return setupState[key]
+            }
+        }
+    })
+    const { setup } = Component  // 传进来的 App或者子组件 的 setup
+    if (setup) {
+        const setupResult = setup()
+        handleSetupResult(instance, setupResult)
+    }
+}
+// ...
+```
+ 
+##### 2.将代理对象 Proxy 绑定到 render 上
+在render执行时，将代理对象 Proxy 绑定到 render 上，即在 setupRenderEffect 方法中渲染 component，执行 render 时就取到了代理对象 Proxy
+```js
+// renderer.ts
+// ...
+function setupRenderEffect(instance, container) {
+    const { proxy } = instance
+    const subTree = instance.render.call(proxy)
+    // vnode -> patch
+    // vnode -> element -> mountElement
+    patch(subTree, container)
+}
+// ...
+```
+此时 再将 App.js 的render 方法改下访问 this，即可访问到 setup 里 return 的对象\
+访问 this 时触发 setupStateFulComponent 方法里 之前代理好的 instance.proxy 的 get
+```js
+render() {
+    return h('div', {
+        id: "root",
+        class: ["root", "head"]
+    },
+    'hi ' + this.msg // this.msg 打印的是 setup 里的值
+    );
+},
+```
+
+#### 使组件里可以访问到 $el
+
+##### 1. 访问 $el 时触发 Proxy 将 el 返回
+首先，创建虚拟节点 createVnode 方法中初始一个 el
+```js
+// vnode.ts
+export function createVnode(type, props?, children?) {
+    const vnode = {
+        type,
+        props,
+        children,
+        el: null  // 初始el ++++++++
+    }
+
+    return vnode
+}
+```
+其次，在访问 this.$el 时，触发 setupStateFulComponent 方法里之前代理好的 instance.proxy 的 get 访问到 key 为 $el，此时取到初始化 vnode 的 el 返回
+```js
+// component.ts
+function setupStateFulComponent(instance: any) {
+    const Component = instance.type // 由于在 createComponentInstance 赋值了type， 所以 instance.type 等价于 instance.vnode.type
+    // 引入代理
+    instance.proxy = new Proxy({}, {
+        get(target, key) {
+            const { setupState } = instance
+            if (key in setupState) {
+                return setupState[key]
+            }
+            // ++++++++++++++++
+            if (key === '$el') {
+                return instance.vnode.el
+            }
+            // ++++++++++++++++
+        }
+    })
+    const { setup } = Component  // 传进来的 App或者子组件 的 setup
+    if (setup) {
+        const setupResult = setup()
+        handleSetupResult(instance, setupResult)
+    }
+}
+```
+最后，只需在 createElement 时，将 element 整个 dom 节点 给到 instance.vnode.el 即可
+```js
+// renderer.ts
+// ...
+function mountElement(vnode, container) {
+    const { type, children, props } = vnode
+    // type  
+    const el = (vnode.el = document.createElement(type)) // 将 vnode.el 绑定 ++++++++++++
+    // children  string, array
+    if (typeof children === 'string') {
+        el.textContent = children
+    } else if (Array.isArray(children)) {
+        mountChildren(vnode.children, el)
+    }
+    // props
+    for (const key in props) {
+        if (Object.prototype.hasOwnProperty.call(props, key)) {
+            const val = props[key]
+            el.setAttribute(key, val)
+        }
+    }
+    container.append(el)
+}
+function mountComponent(initialVnode, container) {
+    const instance = createComponentInstance(initialVnode)
+    // 绑定 setup 和 render 给到组件实例 instance，并执行组件的 setup 获得 return 的值
+    setupComponent(instance)
+    // 执行组件的 render 
+    setupRenderEffect(instance, initialVnode, container) // 继续往下传入 initialVnode ，用于绑定 +++++++++ 
+}
+
+function setupRenderEffect(instance, initialVnode, container) {
+    const { proxy } = instance
+    const subTree = instance.render.call(proxy)
+
+    // vnode -> patch
+    // vnode -> element -> mountElement
+    patch(subTree, container)
+    
+    // 获取初始化完成(element -> mount挂载之后)之后的el，
+    // 挂载完成后的 subTree 结构大致如下
+    /* {
+        children:[],
+        props: {},
+        type: '',
+        el: '#root'
+    } */
+    // 把当前subTree根(root)节点的el赋值给(initialVnode)的el
+    initialVnode.el = subTree.el // ++++++++++++++
+}
+```
+验证，将this绑定给 window.self.$el 浏览器控制台访问就可得到 dom 节点 el
+```js
+// App.js
+// ...
+render() {
+    window.self = this  // +++++++++++++++
+    return h('div', {
+        id: "root",
+        class: ["root", "head"]
+    },
+    'hi ' + this.msg
+    // [
+    //     h("p", {
+    //         class: "red"
+    //     }, "hi"),
+    //     h("p", {
+    //         class: "blue"
+    //     }, "mini-vue")
+    // ]
+    );
+}
+// ...
+```
+结果
+![image.png](https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/cb99169973074c58b72819d3718e47cf~tplv-k3u1fbpfcp-watermark.image?)
+
+> 重构代码，将 setupStateFulComponent 里绑定的代理对象 Proxy 抽离出来
+
+新建 `src/runtime-core/componentPublicInstance.ts`
+```js
+const publicPropertiesMap = {
+    $el: (i) => i.vnode.el
+}
+
+export const PublicInstanceProxyHandlers = {
+    get({ _: instance }, key) {
+        const { setupState } = instance
+        if (key in setupState) {
+            return setupState[key]
+        }
+        // 访问 this.$el 时 key -> $el
+        /* if (key === '$el') {
+            return instance.vnode.el
+        } */
+
+        // 这样可以省去 多个 if 判断写法，因为vue3 也支持 option Api
+        const publicGetter = publicPropertiesMap[key]
+        if (publicGetter) {
+            return publicGetter(instance)
+        }
+
+        // vue3 也支持 option Api，所以也能访问比如以下属性，均可直接配置在 publicPropertiesMap
+        // $options
+        // $data 
+    }
+}
+```
+修改 `renderet.ts` 里的 `setupStateFulComponent` 方法
+```js
+// ...
+// 处理子节点是组件类型的
+function setupStateFulComponent(instance: any) {
+    const Component = instance.type // 由于在 createComponentInstance 赋值了type， 所以 instance.type 等价于 instance.vnode.type
+    // 引入代理
+    instance.proxy = new Proxy({_: instance}, PublicInstanceProxyHandlers) // 将上面的get写法，改为引入抽离出来的handlers ++++++++++++
+    const { setup } = Component  // 传进来的 App或者子组件 的 setup
+    if (setup) {
+        const setupResult = setup()
+        handleSetupResult(instance, setupResult)
+    }
+}
 // ...
 ```
