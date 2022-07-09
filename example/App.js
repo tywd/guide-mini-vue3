@@ -2,7 +2,7 @@
  * @Author: tywd
  * @Date: 2022-07-04 21:17:17
  * @LastEditors: tywd
- * @LastEditTime: 2022-07-05 22:59:44
+ * @LastEditTime: 2022-07-09 20:54:21
  * @FilePath: /guide-mini-vue3/example/App.js
  * @Description: 
  */
@@ -12,13 +12,25 @@ export const App = {
     // <template></template>
     // render
     render() {
-        return h('div', 'ty，', this.msg)
+        return h('div', {
+            id: "root",
+            class: ["root", "head"]
+        },
+        // 'hi ' + this.msg
+        [
+            h("p", {
+                class: "red"
+            }, "hi"),
+            h("p", {
+                class: "blue"
+            }, "mini-vue")
+        ]);
     },
 
     setup() {
         // componition Api
         return {
-            msg: 'hello mini-vue'
+            msg: 'mini-vue'
         }
     }
 }

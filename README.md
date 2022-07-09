@@ -237,7 +237,6 @@ export { createApp } from "./createApp";
 export { h } from "./h";
 ```
 
-
 执行 `yarn build --watch`，watch 可监听修改自动 build
 
 > 修改 `tsconfig.json` \
@@ -245,3 +244,90 @@ export { h } from "./h";
 > 将 `"moduleResolution": "node", ` 注释放开，否则 src/index.ts 会有报错 找不到 `./runtime-core`
 
 此时 浏览器报错 找不到 instance.render 是正常现象
+
+### 3.实现初始化 element 主流程
+先对 App.js 加多点dom
+```js
+// App.js
+// ...
+render() {
+    return h('div', {
+        id: "root",
+        class: ["root", "head"]
+    },
+    // 'hi ' + this.msg
+    [
+        h("p", {
+            class: "red"
+        }, "hi"),
+        h("p", {
+            class: "blue"
+        }, "mini-vue")
+    ]);
+},
+// ...
+```
+修复 `main.js` 的 bug
+```js
+const rootContainer = document.getElementById('#app')  // 此处不应加 # 号， 上次commit 记录 笔主写错了
+```
+修改 `renderer.ts`
+```js
+// renderer.ts
+// ...
+function patch(vnode, container) {
+    // check type of vnode  element 就处理element，如何区分element 和 component
+    // console.log(vnode.type) // 可以看到首次挂在是个object 类型，挂的是 App.js 的组件，如果是string类型则直接是element
+    if (typeof vnode.type === 'string') { // element
+        processElement(vnode, container)
+    } else if (isObject(vnode.type)) { // component
+        processComponent(vnode, container)
+    }
+}
+
+// 处理element类型
+function processElement(vnode, container) {
+    mountElement(vnode, container)
+}
+
+// 挂载element
+function mountElement(vnode, container) {
+    /* const el = document.createElement("div")
+    el.textContent = 'hi mini-vue'
+    el.setAttribute('id', 'root')
+    document.body.append(el) */
+
+    // 对应  App.js 中的
+    /* h('div', {
+        id: 'root',
+        class: ['red', 'blue']
+    }, 
+    'hi, ' + this.msg) */
+
+    const { type, children, props } = vnode
+    // type  
+    const el = document.createElement(type)
+    // children  string, array
+    if (typeof children === 'string') {
+        el.textContent = children
+    } else if (Array.isArray(children)) {
+        mountChildren(vnode.children, el)
+    }
+    // props
+    for (const key in props) {
+        if (Object.prototype.hasOwnProperty.call(props, key)) {
+            const val = props[key]
+            el.setAttribute(key, val)
+        }
+    }
+    container.append(el)
+}
+
+// 嵌套 children 类型 继续进行 patch
+function mountChildren(children, container) {
+    children.forEach(v => {
+        patch(v, container)
+    });
+}
+// ...
+```
