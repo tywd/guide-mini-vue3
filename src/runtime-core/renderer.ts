@@ -2,7 +2,7 @@
  * @Author: tywd
  * @Date: 2022-07-04 21:41:59
  * @LastEditors: tywd
- * @LastEditTime: 2022-07-10 16:32:33
+ * @LastEditTime: 2022-07-10 22:26:03
  * @FilePath: /guide-mini-vue3/src/runtime-core/renderer.ts
  * @Description: 
  */
@@ -67,7 +67,15 @@ function mountElement(vnode, container) {
     for (const key in props) {
         if (Object.prototype.hasOwnProperty.call(props, key)) {
             const val = props[key]
-            el.setAttribute(key, val)
+            const isOn = (key) => /^on[A-Z]/.test(key); // 判断是否是onClick等一类on开头的事件
+            if (isOn(key)) {
+                // element事件添加
+                const event = key.slice(2).toLowerCase();
+                el.addEventListener(event, val);
+            } else { 
+                // element属性添加
+                el.setAttribute(key, val)
+            }
         }
     }
     container.append(el)

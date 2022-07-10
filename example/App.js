@@ -2,7 +2,7 @@
  * @Author: tywd
  * @Date: 2022-07-04 21:17:17
  * @LastEditors: tywd
- * @LastEditTime: 2022-07-10 15:57:13
+ * @LastEditTime: 2022-07-10 22:30:27
  * @FilePath: /guide-mini-vue3/example/App.js
  * @Description: 
  */
@@ -17,7 +17,13 @@ export const App = {
         window.self = this
         return h('div', {
             id: "root",
-            class: ["root", "head"]
+            class: ["root", "head"],
+            onClick($el) {
+                console.log($el, 'onClick');
+            },
+            onMousedown($el) {
+                console.log($el, 'onMousedown');
+            },
         },            
         // setupState
         // this.$el -> get root element

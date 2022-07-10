@@ -697,3 +697,65 @@ function mountElement(vnode, container) {
 `9 -----> 1001 -----  ELEMENT & ARRAY_CHILDREN` h 函数里的第三个参数 children (array)
 
 `5 -----> 0101 -----  ELEMENT & TEXT_CHILDREN` children 里面 h 函数的第三个函数 children (text)
+
+
+### 6.实现注册事件功能
+修改 `App.js`, 加入事件 比如 `onClick` 和 `onMousedown`
+```js
+// ...
+render() {
+    window.self = this
+    return h('div', {
+        id: "root",
+        class: ["root", "head"],
+        // +++++++++
+        onClick($el) {
+            console.log($el, 'onClick');
+        },
+        onMousedown($el) {
+            console.log($el, 'onMousedown');
+        },
+        // +++++++++
+    },            
+    // setupState
+    // this.$el -> get root element
+    // 'hi ' + this.msg
+    [
+        h("p", {
+            class: "red"
+        }, "hi"),
+        h("p", {
+            class: "blue"
+        }, this.msg)
+    ]
+    );
+}
+// ...
+```
+修改 `renderer.ts` 的 `mountElement` 方法
+```js
+// renderer.ts
+// ...
+function mountElement() {
+    // ...
+    for (const key in props) {
+        if (Object.prototype.hasOwnProperty.call(props, key)) {
+            const val = props[key]
+            // +++++++
+            const isOn = (key) => /^on[A-Z]/.test(key); // 判断是否是onClick等一类on开头的事件
+            if (isOn(key)) {
+                // element事件添加
+                const event = key.slice(2).toLowerCase();
+                el.addEventListener(event, val);
+            } else { 
+                // element属性添加
+                el.setAttribute(key, val)
+            }
+            // +++++++
+        }
+    }
+    container.append(el)
+}
+// ...
+```
+结果，浏览器点击 节点后就会打印对应的事件
