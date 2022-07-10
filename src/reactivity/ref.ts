@@ -2,11 +2,11 @@
  * @Author: tywd
  * @Date: 2022-06-27 21:42:52
  * @LastEditors: tywd
- * @LastEditTime: 2022-06-28 12:09:46
- * @FilePath: \guide-mini-vue3\src\reactivity\ref.ts
+ * @LastEditTime: 2022-07-10 12:01:23
+ * @FilePath: /guide-mini-vue3/src/reactivity/ref.ts
  * @Description: ref isRef unRef proxyRefs
  */
-import { hasChanged, isObject } from './shared/index';
+import { hasChanged, isObject } from '../shared';
 import { isTracking, trackEffects, triggerEffects } from "./effect";
 import { reactive } from './reactive';
 class RefImpl {

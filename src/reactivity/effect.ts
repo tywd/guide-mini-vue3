@@ -6,7 +6,7 @@
  * @FilePath: /guide-mini-vue3/src/reactivity/effect.ts
  * @Description: effect 实现
  */
-import { extend } from "./shared";
+import { extend } from "../shared";
 let activeEffect,shouldTrack; // shouldTrack 是否应该收集依赖
 export class ReactiveEffect {
     private _fn: any

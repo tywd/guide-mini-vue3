@@ -2,13 +2,13 @@
  * @Author: tywd
  * @Date: 2022-06-14 20:09:26
  * @LastEditors: tywd
- * @LastEditTime: 2022-06-26 16:51:43
+ * @LastEditTime: 2022-07-10 12:01:24
  * @FilePath: /guide-mini-vue3/src/reactivity/baseHandles.ts
  * @Description: 基础控制器
  */
 import { track, trigger } from "./effect";
 import { reactive, ReactiveFlags, readonly } from "./reactive";
-import { extend, isObject } from "./shared";
+import { extend, isObject } from "../shared";
 
 // 提前初始化变量，方便复用
 const get = createGetter();

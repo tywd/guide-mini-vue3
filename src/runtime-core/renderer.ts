@@ -2,11 +2,12 @@
  * @Author: tywd
  * @Date: 2022-07-04 21:41:59
  * @LastEditors: tywd
- * @LastEditTime: 2022-07-10 00:20:22
+ * @LastEditTime: 2022-07-10 16:32:33
  * @FilePath: /guide-mini-vue3/src/runtime-core/renderer.ts
  * @Description: 
  */
-import { isObject } from './../reactivity/shared/index';
+import { isObject } from '../shared';
+import { ShapeFlags } from '../shared/ShapeFlags';
 import { createComponentInstance, setupComponent } from "./component"
 export function render(vnode, container) {
     patch(vnode, container)
@@ -14,10 +15,18 @@ export function render(vnode, container) {
 
 function patch(vnode, container) {
     // check type of vnode  element 就处理element，如何区分element 和 component
-    // console.log(vnode.type) // 可以看到首次挂在是个object 类型，挂的是 App.js 的组件，如果是string类型则直接是element
-    if (typeof vnode.type === 'string') { // element
+    // console.log(vnode.type) // 可以看到首次挂在 是个object 类型，挂的是 App.js 的组件，如果是string类型则直接是element
+    /* if (typeof vnode.type === 'string') { // element
         processElement(vnode, container)
     } else if (isObject(vnode.type)) { // component
+        processComponent(vnode, container)
+    } */
+
+    const { shapeFlag } = vnode
+    console.log('shapeFlag: ', shapeFlag) // 具体打印说明查看 README.md 《实现 shapeFlags》 章节
+    if (shapeFlag & ShapeFlags.ELEMENT) {
+        processElement(vnode, container)
+    } else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
         processComponent(vnode, container)
     }
 }
@@ -40,14 +49,19 @@ function mountElement(vnode, container) {
     }, 
     'hi, ' + this.msg) */
 
-    const { type, children, props } = vnode
+    const { type, children, props, shapeFlag } = vnode
     // type  
     const el = (vnode.el = document.createElement(type))
     // children  string, array
-    if (typeof children === 'string') {
+    /* if (typeof children === 'string') {
         el.textContent = children
     } else if (Array.isArray(children)) {
         mountChildren(vnode.children, el)
+    } */
+    if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
+        el.textContent = children
+    } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+        mountChildren(children, el)
     }
     // props
     for (const key in props) {
@@ -97,7 +111,7 @@ function setupRenderEffect(instance, initialVnode, container) {
     // vnode -> patch
     // vnode -> element -> mountElement
     patch(subTree, container)
-    
+
     // 获取初始化完成(element -> mount挂载之后)之后的el，
     // 挂载完成后的 subTree 结构大致如下
     /* {

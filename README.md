@@ -569,3 +569,131 @@ function setupStateFulComponent(instance: any) {
 }
 // ...
 ```
+### 5.实现 shapeFlags
+**使用位运算来判断传入节点的类型，位运算提高 patch 性能**
+
+新建 `ShapeFlags.ts`
+```js
+export const enum ShapeFlags {
+    ELEMENT = 1, // 0001  element 类型
+    STATEFUL_COMPONENT = 1 << 1, // 0010  component 类型
+    TEXT_CHILDREN = 1 << 2, // 0100  children 为 text 类型
+    ARRAY_CHILDREN = 1 << 3, // 1000  children 为 array 类型
+}
+```
+初始化 `shapeFlag` 给到 `vnode` 虚拟节点，方便 renderer.ts 挂载时判断节点类型，**提高性能**
+```js
+// vnode.ts
+export function createVnode(type, props?, children?) {
+    const vnode = {
+        type,
+        props,
+        children,
+        el: null,
+        shapeFlag: getShapeFlag(type)
+    }
+
+    // children 判断是什么 children 类型，可能是 text 或者 array
+    if (typeof children === 'string') {
+        vnode.shapeFlag |= ShapeFlags.TEXT_CHILDREN
+    } else if (Array.isArray(children)) {
+        vnode.shapeFlag |= ShapeFlags.ARRAY_CHILDREN
+    }
+
+    return vnode
+}
+
+const getShapeFlag = (type) => typeof type === 'string' ? ShapeFlags.ELEMENT : ShapeFlags.STATEFUL_COMPONENT
+```
+`App.js` 内的 `render` 中的 `h` 函数有可能有 `children-array` 或者是 `text-array` 类型，例如下
+```js
+// ...
+render() {
+    window.self = this
+    return h('div', {
+        id: "root",
+        class: ["root", "head"]
+    },            
+    // setupState
+    // this.$el -> get root element
+    //  text 类型 +++++++
+    // 'hi ' + this.msg   
+    //  array 类型 +++++++
+    [
+        h("p", {
+            class: "red"
+        }, "hi"),
+        h("p", {
+            class: "blue"
+        }, this.msg)
+    ]
+    );
+}
+// ...
+```
+
+改写 `patch` 函数 与 `mountElement` 函数 \
+使用 `shapeFlag` 来判断 `vnode` 的具体类型
+
+```js
+function patch(vnode, container) {
+    // check type of vnode  element 就处理element，如何区分element 和 component
+    // console.log(vnode.type) // 可以看到首次挂在 是个object 类型，挂的是 App.js 的组件，如果是string类型则直接是element
+    /* if (typeof vnode.type === 'string') { // element
+        processElement(vnode, container)
+    } else if (isObject(vnode.type)) { // component
+        processComponent(vnode, container)
+    } */
+    // ++++++++++++
+    const { shapeFlag } = vnode
+    console.log('shapeFlag: ', shapeFlag) // 根据上面的 App.js 为例，执行几次分别 打印出 2 9 5 5  !!此处说明 ++++++++++------------ 
+    if (shapeFlag & ShapeFlags.ELEMENT) {
+        processElement(vnode, container)
+    } else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
+        processComponent(vnode, container)
+    }
+    // ++++++++++++
+}
+// ...
+function mountElement(vnode, container) {
+    const { type, children, props, shapeFlag } = vnode
+    // type  
+    const el = (vnode.el = document.createElement(type))
+    // children  string, Array
+    /* if (typeof children === 'string') {
+        el.textContent = children
+    } else if (Array.isArray(children)) {
+        mountChildren(vnode.children, el)
+    } */
+    // ++++++++++++
+    if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
+        el.textContent = children
+    } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+        mountChildren(children, el)
+    }
+    // ++++++++++++
+    // props
+    for (const key in props) {
+        if (Object.prototype.hasOwnProperty.call(props, key)) {
+            const val = props[key]
+            el.setAttribute(key, val)
+        }
+    }
+    container.append(el)
+}
+// ...
+```
+
+> 补充说明 `shapeFlag` 的打印分别 打印出 2 9 5 5 \
+> 以上面的 App.js 传入的 render 为例，对应关系如下\
+> 控制台 使用 `2..toString(2)` 可得出 0010
+```js
+    2 -----> 0010 -----  STATEFUL_COMPONENT
+    9 -----> 1001 -----  ELEMENT & ARRAY_CHILDREN
+    5 -----> 0101 -----  ELEMENT & TEXT_CHILDREN
+```
+`2 -----> 0010 -----  STATEFUL_COMPONENT` 对应初始挂载 App 整个component
+
+`9 -----> 1001 -----  ELEMENT & ARRAY_CHILDREN` h 函数里的第三个参数 children (array)
+
+`5 -----> 0101 -----  ELEMENT & TEXT_CHILDREN` children 里面 h 函数的第三个函数 children (text)
