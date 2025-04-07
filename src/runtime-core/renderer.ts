@@ -2,7 +2,7 @@
  * @Author: tywd
  * @Date: 2022-07-04 21:41:59
  * @LastEditors: tywd
- * @LastEditTime: 2022-07-10 22:26:03
+ * @LastEditTime: 2022-07-20 22:07:11
  * @FilePath: /guide-mini-vue3/src/runtime-core/renderer.ts
  * @Description: 
  */
@@ -23,7 +23,7 @@ function patch(vnode, container) {
     } */
 
     const { shapeFlag } = vnode
-    console.log('shapeFlag: ', shapeFlag) // 具体打印说明查看 README.md 《实现 shapeFlags》 章节
+    // console.log('shapeFlag: ', shapeFlag) // 具体打印说明查看 README.md 《实现 shapeFlags》 章节
     if (shapeFlag & ShapeFlags.ELEMENT) {
         processElement(vnode, container)
     } else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {

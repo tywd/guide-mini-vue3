@@ -698,7 +698,6 @@ function mountElement(vnode, container) {
 
 `5 -----> 0101 -----  ELEMENT & TEXT_CHILDREN` children 里面 h 函数的第三个函数 children (text)
 
-
 ### 6.实现注册事件功能
 修改 `App.js`, 加入事件 比如 `onClick` 和 `onMousedown`
 ```js
@@ -759,3 +758,5 @@ function mountElement() {
 // ...
 ```
 结果，浏览器点击 节点后就会打印对应的事件
+
+### 7.实现组件 props 功能

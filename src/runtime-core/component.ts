@@ -2,10 +2,11 @@
  * @Author: tywd
  * @Date: 2022-07-04 22:02:41
  * @LastEditors: tywd
- * @LastEditTime: 2022-07-10 00:28:15
+ * @LastEditTime: 2022-07-20 23:55:11
  * @FilePath: /guide-mini-vue3/src/runtime-core/component.ts
  * @Description: componnet 处理
  */
+import { initProps } from "./componentProps"
 import { PublicInstanceProxyHandlers } from "./componentPublicInstance"
 /**
  * @description 创建组件实例
@@ -16,7 +17,8 @@ export function createComponentInstance(vnode: any) {
     const component = {
         vnode,
         type: vnode.type,
-        setupState: {} // 创建组件实例时初始化一个 setupeState，该值是 执行 setup 后的结果
+        setupState: {}, // 创建组件实例时初始化一个 setupeState，该值是 执行 setup 后的结果
+        props: {} // 创建组件实例时初始化一个 props，最终会给到 setup
     }
 
     return component
@@ -28,7 +30,7 @@ export function createComponentInstance(vnode: any) {
  */
 export function setupComponent(instance) {
     // TODO
-    // initProps()
+    initProps(instance, instance.vnode.props)
     // initSlots()
     setupStateFulComponent(instance)
 }
@@ -37,10 +39,10 @@ export function setupComponent(instance) {
 function setupStateFulComponent(instance: any) {
     const Component = instance.type // 由于在 createComponentInstance 赋值了type， 所以 instance.type 等价于 instance.vnode.type
     // 引入代理
-    instance.proxy = new Proxy({_: instance}, PublicInstanceProxyHandlers)
+    instance.proxy = new Proxy({_: instance}, PublicInstanceProxyHandlers) // 当 renderer.ts 中 instance.render 调用时绑定 proxy 形成闭环
     const { setup } = Component  // 传进来的 App或者子组件 的 setup
     if (setup) {
-        const setupResult = setup()
+        const setupResult = setup(instance.props)
         handleSetupResult(instance, setupResult)
     }
 }

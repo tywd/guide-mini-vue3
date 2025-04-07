@@ -2,7 +2,7 @@
  * @Author: tywd
  * @Date: 2022-07-10 00:26:24
  * @LastEditors: tywd
- * @LastEditTime: 2022-07-10 00:33:08
+ * @LastEditTime: 2022-09-04 15:03:33
  * @FilePath: /guide-mini-vue3/src/runtime-core/componentPublicInstance.ts
  * @Description: 
  */
@@ -27,7 +27,7 @@ export const PublicInstanceProxyHandlers = {
             return publicGetter(instance)
         }
 
-        // vue3 也支持 option Api，所以也能访问比如以下属性，均可直接配置在 publicPropertiesMap
+        // vue3 也支持 option Api，所 以也能访问比如以下属性，均可直接配置在 publicPropertiesMap
         // $options
         // $data 
     }
